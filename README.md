@@ -471,3 +471,42 @@ $(function () {
     );
 });
 ```
+
+- Run the Application and see the result
+
+![autofilterer-with-abp-range-filter](/art/images/filter-range-preview.gif)
+
+---
+
+## Source-Code
+You can find final version of this example on github.
+
+- [enisn/abp-autofilterer-sample](https://github.com/enisn/abp-autofilterer-sample)
+
+---
+
+## Discussion
+There is a couple of questions that you can think about. In this _"Discussion"_ section I'll try to answer them.
+
+### Is Defining Comparison in Dto ok?
+As a first impression, I tough, it's not ok because `Application.Contracts` can be shipped to clients. It's true, definition of filter is in DTO, but the implementation is in `Application` layer. So if a developer who implements client-side, can see something like below.
+
+```csharp
+public class BookGetListInput : FilterBase, IPagedAndSortedResultRequest
+{
+    // Configure 'Filter' property for built-in search boxes.
+    [CompareTo(
+        nameof(BookDto.Title),
+        nameof(BookDto.Language),
+        nameof(BookDto.Author),
+        nameof(BookDto.Country)
+        )]
+    [StringFilterOptions(StringFilterOption.Contains)]
+    public string Filter { get; set; }
+}
+```
+
+I think that's ok, because the developer'll understand what filtering does. It's kind of documentation with attributes.
+
+### Why didn't use  Sorting & Pagination feature of AutoFilterer
+ABP does those features well and UI frameworks(Razor Pages, Angular and Blazor) already implemented sorting and pagination with those existin parameters. Chaning cost is high because if you change, you'll need to implement them for each UI framework.
