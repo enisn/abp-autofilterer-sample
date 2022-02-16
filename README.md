@@ -213,3 +213,101 @@ CreateMap<Book, BookDto>().ReverseMap();
 
 ---
 
+### Displaying on UI
+
+Let's start with creating a page to show data list and filter it with a textbox.
+
+- Create `Books/Index.cshtml` / `Books/Index.cshtml.cs`
+
+```cs
+namespace Acme.BookStore.Web.Pages.Books;
+
+public class IndexModel : BookStorePageModel
+{
+}
+```
+
+```html
+@page
+@using Acme.BookStore.Localization
+@using Acme.BookStore.Web.Pages.Books
+@using Microsoft.Extensions.Localization
+
+@model IndexModel
+
+@inject IStringLocalizer<BookStoreResource> L
+
+<h2>Books</h2>
+
+@section scripts
+{
+	<abp-script src="/Pages/Books/index.js" />
+}
+
+<abp-card>
+	<abp-card-header>
+		<h2>@L["Books"]</h2>
+	</abp-card-header>
+	<abp-card-body>
+		<abp-table striped-rows="true" id="BooksTable"></abp-table>
+	</abp-card-body>
+</abp-card>
+```
+
+- Create index.js in the same folder
+```js
+$(function () {
+    var l = abp.localization.getResource('BookStore');
+
+    var dataTable = $('#BooksTable').DataTable(
+        abp.libs.datatables.normalizeConfiguration({
+            serverSide: true,
+            paging: true,
+            order: [[1, "asc"]],
+            searching: true,
+            scrollX: true,
+            ajax: abp.libs.datatables.createAjax(acme.bookStore.books.book.getList),
+            columnDefs: [
+                {
+                    title: l('Title'),
+                    data: "title"
+                },
+                {
+                    title: l('Language'),
+                    data: "language",
+                },
+                {
+                    title: l('Country'),
+                    data: "country",
+                },
+                {
+                    title: l('Author'),
+                    data: "author"
+                },
+                {
+                    title: l('TotalPage'),
+                    data: "totalPage",
+                    render: function (data) {
+                        return data + ' pages'
+                    }
+                },
+                {
+                    title: l('Year'),
+                    data: "year"
+                },
+                {
+                    title: l('Link'),
+                    data: "link",
+                    render: function (data) {
+                        return '<a href="' + data + '" target="_blank">Link</a>';
+                    }
+                },
+            ]
+        })
+    );
+});
+```
+
+- Run the project and see how it's working!
+
+![autofilterer-preview-with-abp](/art/images/filter-preview.gif)
