@@ -42,7 +42,7 @@ public IMongoCollection<Book> Books { get; set; }
 ```
 
 - Create a DataSeedContributor
-    - Add this [initial-books.json](src/Acme.BookStore.Domain/Books/initial-books.json) file to `Acme.BookStore.Domain/Books/` path and make build action as **Embedded Resource**.
+    - Add this [initial-books.json](https://github.com/enisn/abp-autofilterer-sample/blob/main/src/Acme.BookStore.Domain/Books/initial-books.json) file to `Acme.BookStore.Domain/Books/` path and make build action as **Embedded Resource**.
     
 
 ```csharp
