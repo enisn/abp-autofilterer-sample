@@ -12,7 +12,7 @@ If you are familiar to application development with ABP Framework, you can skip 
 
 - Create a new project:
 _(I prefer mongodb as database provider to get rid of Ef migrations. You can go with Ef on your own.)_
-```shell
+```bash
 abp new Acme.BookStore -t app -d mongodb
 ```
 
@@ -85,3 +85,83 @@ public class BookstoreDataSeederContributor : IDataSeedContributor, ITransientDe
 ```
 
 - Run the **DbMigrator** and database with existing data is ready!
+
+---
+
+## Implementing AutoFilterer
+
+- Add `AutoFilterer` package to your **Application.Contracts** project.
+```bash
+dotnet add package AutoFilterer
+```
+
+### Designing the Application.Contracts Layer
+In this section, We'll implement AutoFilterer package and use it for only filtering data. We'll leave **Sorting** and **Paging** to ABP Framework, because it already does it well and works with more than one UI compatible.
+
+
+- Let's start with creating DTOs.
+    - BookDto
+    ```csharp
+    using System;
+    using Volo.Abp.Application.Dtos;
+
+    namespace Acme.BookStore.Books;
+
+    [Serializable]
+    public class BookDto : AuditedEntityDto<Guid>
+    {
+        public string Title { get; set; }
+        public string Language { get; set; }
+        public string Country { get; set; }
+        public string Author { get; set; }
+        public int TotalPage { get; set; }
+        public int Year { get; set; }
+        public string Link { get; set; }
+    }
+    ```
+
+    - BookGetListInput
+    ```csharp
+    using AutoFilterer.Attributes;
+    using AutoFilterer.Enums;
+    using AutoFilterer.Types;
+    using System;
+    using Volo.Abp.Application.Dtos;
+
+    namespace Acme.BookStore.Books;
+
+    [Serializable]
+    // We'll leave Paging and Sorting to ABP, we'll use only filtering feature of AutoFilterer.
+    // So using FilterBase as a base class is enough.
+    public class BookGetListInput : FilterBase, IPagedAndSortedResultRequest
+    {
+        // Configure 'Filter' property for built-in search boxes.
+        [CompareTo(
+            nameof(BookDto.Title),
+            nameof(BookDto.Language),
+            nameof(BookDto.Author),
+            nameof(BookDto.Country)
+            )]
+        [StringFilterOptions(StringFilterOption.Contains)]
+        public string Filter { get; set; }
+
+        // IPagedAndSortedResultRequest implementation below.
+        public int SkipCount { get; set; }
+
+        public int MaxResultCount { get; set; }
+
+        public string Sorting { get; set; }
+    }
+    ```
+
+    - IBookAppService
+    ```csharp
+    using System;
+    using Volo.Abp.Application.Services;
+
+    namespace Acme.BookStore.Books;
+
+    public interface IBookAppService : ICrudAppService<BookDto, Guid, BookGetListInput>
+    {
+    }
+    ```
