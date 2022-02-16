@@ -8,7 +8,7 @@ This article is about filtering data automatically without writing any LINQ via 
 
 
 ## Initializing a New Project
-If you are familiar to application development with ABP Framework, you can skip to the next step **"Implementing AutoFilterer"**.
+If you are familiar with application development with ABP Framework, you can skip to the next step **"Implementing AutoFilterer"**.
 
 - Create a new project:
 _(I prefer mongodb as database provider to get rid of Ef migrations. You can go with Ef on your own.)_
@@ -94,18 +94,15 @@ public class BookstoreDataSeederContributor : IDataSeedContributor, ITransientDe
 
 ---
 
-## Implementing AutoFilterer
+## Designing the Application.Contracts Layer
+In this section, We'll implement AutoFilterer package and use it for only filtering data. We'll leave **Sorting** and **Paging** to ABP Framework, because it already does it well and works with more than one UI compatible.
 
 - Add `AutoFilterer` package to your **Application.Contracts** project.
 ```bash
 dotnet add package AutoFilterer
 ```
 
-### Designing the Application.Contracts Layer
-In this section, We'll implement AutoFilterer package and use it for only filtering data. We'll leave **Sorting** and **Paging** to ABP Framework, because it already does it well and works with more than one UI compatible.
-
-
-- Let's start with creating DTOs.
+- Let's start coding with creating DTOs.
     - BookDto
     ```csharp
     using System;
@@ -172,12 +169,9 @@ In this section, We'll implement AutoFilterer package and use it for only filter
     }
     ```
 
-
-
-
 ---
 
-### Implementing Application Layer
+## Implementing Application Layer
 I prefer using **CrudAppService** to skip unrelated CRUD operations.
 
 - Create **BookAppService** and apply AutoFilterer filtering to queryable via overriding **CreateFilteredQueryAsync**.
@@ -213,7 +207,7 @@ CreateMap<Book, BookDto>().ReverseMap();
 
 ---
 
-### Displaying on UI
+## Displaying on UI
 
 Let's start with creating a page to show data list and filter it with a textbox.
 
@@ -311,3 +305,169 @@ $(function () {
 - Run the project and see how it's working!
 
 ![autofilterer-preview-with-abp](/art/images/filter-preview.gif)
+
+
+## Filtering Specific Properties
+AutoFilterer supports some different features like [Filtering with Range](https://github.com/enisn/AutoFilterer/wiki/Working-with-Range). Let's filter **TotalPage** and **Year** properties with range.
+
+- Add following `TotalPage` and `Year` properties to **BookGetListInput**.
+
+```csharp
+public class BookGetListInput : FilterBase, IPagedAndSortedResultRequest
+{
+    // Configure 'Filter' property for built-in search boxes.
+    [CompareTo(
+        nameof(BookDto.Title),
+        nameof(BookDto.Language),
+        nameof(BookDto.Author),
+        nameof(BookDto.Country)
+        )]
+    [StringFilterOptions(StringFilterOption.Contains)]
+    public string Filter { get; set; }
+
+    public Range<int> TotalPage { get; set; } // <-- Add this one
+
+    public Range<int> Year { get; set; } // <-- and this
+
+    // IPagedAndSortedResultRequest implementation below.
+    public int SkipCount { get; set; }
+
+    public int MaxResultCount { get; set; }
+
+    public string Sorting { get; set; }
+}
+```
+
+- Update **Index.cshtml** too
+```html
+@page
+@using Acme.BookStore.Localization
+@using Acme.BookStore.Web.Pages.Books
+@using Microsoft.Extensions.Localization
+
+@model IndexModel
+
+@inject IStringLocalizer<BookStoreResource> L
+
+<h2>Books</h2>
+
+@section scripts
+{
+	<abp-script src="/Pages/Books/index.js" />
+}
+
+<abp-card>
+	<abp-card-header>
+		<h2>@L["Books"]</h2>
+	</abp-card-header>
+	<abp-card-body>
+		<div id="books-filter-wrapper">
+			<div class="row">
+
+				<div class="col-6">
+					<label class="form-label"> TotalPage </label>
+					<div class="row">
+						<div class="col-6">
+							<label class="form-label">Min</label>
+							<input id="TotalPageMin" type="number" class="form-control" />
+						</div>
+						<div class="col-6">
+							<label class="form-label">Max</label>
+							<input id="TotalPageMax" type="number" class="form-control" />
+						</div>
+					</div>
+				</div>
+
+				<div class="col-6">
+					<label class="form-label"> Year </label>
+					<div class="row">
+						<div class="col-6">
+							<label class="form-label">Min</label>
+							<input id="YearMin" type="number" class="form-control" />
+						</div>
+						<div class="col-6">
+							<label class="form-label">Max</label>
+							<input id="YearMax" type="number" class="form-control" />
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<div class="mt-2">
+			<abp-table striped-rows="true" id="BooksTable"></abp-table>
+		</div>
+	</abp-card-body>
+</abp-card>
+```
+
+- Update **index.js** file to send those parameters to API
+```js
+$(function () {
+    var l = abp.localization.getResource('BookStore');
+
+    var getFilter = function () {
+        return {
+            totalPage: {
+                min: $('#TotalPageMin').val(),
+                max: $('#TotalPageMax').val()
+            },
+            year: {
+                min: $('#YearMin').val(),
+                max: $('#YearMax').val()
+            }
+        };
+    };
+
+    $("#books-filter-wrapper :input").on('input', function () {
+        dataTable.ajax.reload();
+    });
+
+    var dataTable = $('#BooksTable').DataTable(
+        abp.libs.datatables.normalizeConfiguration({
+            serverSide: true,
+            paging: true,
+            order: [[1, "asc"]],
+            searching: true,
+            scrollX: true,
+            ajax: abp.libs.datatables.createAjax(acme.bookStore.books.book.getList, getFilter),
+            columnDefs: [
+                {
+                    title: l('Title'),
+                    data: "title"
+                },
+                {
+                    title: l('Language'),
+                    data: "language",
+                },
+                {
+                    title: l('Country'),
+                    data: "country",
+                },
+                {
+                    title: l('Author'),
+                    data: "author"
+                },
+                {
+                    title: l('TotalPage'),
+                    data: "totalPage",
+                    render: function (data) {
+                        return data + ' pages'
+                    }
+                },
+                {
+                    title: l('Year'),
+                    data: "year"
+                },
+                {
+                    title: l('Link'),
+                    data: "link",
+                    render: function (data) {
+                        return '<a href="' + data + '" target="_blank">Link</a>';
+                    }
+                },
+            ]
+        })
+    );
+});
+```

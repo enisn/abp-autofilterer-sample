@@ -21,6 +21,10 @@ public class BookGetListInput : FilterBase, IPagedAndSortedResultRequest
     [StringFilterOptions(StringFilterOption.Contains)]
     public string Filter { get; set; }
 
+    public Range<int> TotalPage { get; set; } // <-- Add this one
+
+    public Range<int> Year { get; set; } // <-- and this
+
     // IPagedAndSortedResultRequest implementation below.
     public int SkipCount { get; set; }
 

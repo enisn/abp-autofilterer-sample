@@ -19,6 +19,41 @@
 		<h2>@L["Books"]</h2>
 	</abp-card-header>
 	<abp-card-body>
-		<abp-table striped-rows="true" id="BooksTable"></abp-table>
+		<div id="books-filter-wrapper">
+			<div class="row">
+
+				<div class="col-6">
+					<label class="form-label"> TotalPage </label>
+					<div class="row">
+						<div class="col-6">
+							<label class="form-label">Min</label>
+							<input id="TotalPageMin" type="number" class="form-control" />
+						</div>
+						<div class="col-6">
+							<label class="form-label">Max</label>
+							<input id="TotalPageMax" type="number" class="form-control" />
+						</div>
+					</div>
+				</div>
+
+				<div class="col-6">
+					<label class="form-label"> Year </label>
+					<div class="row">
+						<div class="col-6">
+							<label class="form-label">Min</label>
+							<input id="YearMin" type="number" class="form-control" />
+						</div>
+						<div class="col-6">
+							<label class="form-label">Max</label>
+							<input id="YearMax" type="number" class="form-control" />
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+		<div class="mt-2">
+			<abp-table striped-rows="true" id="BooksTable"></abp-table>
+		</div>
 	</abp-card-body>
 </abp-card>
