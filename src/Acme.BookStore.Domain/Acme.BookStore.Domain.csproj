@@ -8,6 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Books\initial-books.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Books\initial-books.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Acme.BookStore.Domain.Shared\Acme.BookStore.Domain.Shared.csproj" />
   </ItemGroup>
 
