@@ -28,7 +28,7 @@ public class BookstoreDataSeederContributor : IDataSeedContributor, ITransientDe
 
     private Book[] GetInitialBooks()
     {
-        var json = GetEmbeddedResourceAsText("Acme.Bookstore.Books.initial-books.json");
+        var json = GetEmbeddedResourceAsText("Acme.BookStore.Books.initial-books.json");
 
         return JsonConvert.DeserializeObject<Book[]>(json);
     }
