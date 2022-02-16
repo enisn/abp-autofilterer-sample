@@ -36,9 +36,15 @@ public class Book : FullAuditedAggregateRoot<Guid>
 }
 ```
 
+- Add following property to **BookStoreMongoDbContext**
+```csharp
+public IMongoCollection<Book> Books { get; set; }
+```
+
 - Create a DataSeedContributor
     - Add this [initial-books.json](src/Acme.BookStore.Domain/Books/initial-books.json) file to `Acme.BookStore.Domain/Books/` path and make build action as **Embedded Resource**.
     
+
 ```csharp
 using Newtonsoft.Json;
 using System;
@@ -199,4 +205,11 @@ public class BookAppService : CrudAppService<Book, BookDto, Guid, BookGetListInp
     }
 }
 ```
+
+- Add following mapping in **BookStoreApplicationAutoMapperProfile**
+```csharp
+CreateMap<Book, BookDto>().ReverseMap();
+```
+
 ---
+
